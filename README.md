@@ -2,7 +2,7 @@
 
 Fractals
 
-![alt text](frag.jpg)
+![alt text](https://github.com/k3ll3x/C-Xlib-Fractals/blob/main/frac.jpg?raw=true "Trifrac")
 
 This is a simple C program that uses complex.h for manipulating complex numbers for the fractal calculation
 
