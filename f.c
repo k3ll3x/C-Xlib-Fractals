@@ -6,6 +6,7 @@
  */
 
 #include <X11/Xlib.h>
+#include <X11/Xutil.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -40,16 +41,19 @@ void zoom(char c, int x, int y){
 	//xf and yf should be used to 'auto'-zoom
 	float xf = map(x, rminx, rmaxx, cminx, cmaxx);
 	float yf = map(y, rminy, rmaxy, cminy, cmaxy);
+
+	float zoomstep = 0.1f;
+	
 	if(c == '-'){
-		cminx -= 0.1f;
-		cmaxx += 0.1f;
-		cminy -= 0.1f;
-		cmaxy += 0.1f;
+		cminx -= zoomstep;
+		cmaxx += zoomstep;
+		cminy -= zoomstep;
+		cmaxy += zoomstep;
 	}else if(c == '+'){
-		cminx += 0.1f;
-		cmaxx -= 0.1f;
-		cminy += 0.1f;
-		cmaxy -= 0.1f;
+		cminx += zoomstep;
+		cmaxx -= zoomstep;
+		cminy += zoomstep;
+		cmaxy -= zoomstep;
 	}
 }
 
@@ -92,6 +96,10 @@ void calculatePixels(Display *d, Window w, int s, int x){
 			iter = 0;
 		}
 	}
+	char txt[20];
+	snprintf(txt, 20, "c = %f", c);
+	XSetForeground(d, DefaultGC(d, s), _RGB(255,255,255));
+	XDrawString(d, w, DefaultGC(d, s), 0, 10, txt, strlen(txt));
 }
 
 unsigned long _RGB(int r,int g, int b){
@@ -130,6 +138,7 @@ int main(int argc, char ** argv){
 	XStoreName(d, w, "Fractals");
 
 	int x, y;
+	unsigned short ar = 1;
 
 	while(1) {
 		XNextEvent(d, &e);
@@ -155,29 +164,71 @@ int main(int argc, char ** argv){
 		}
 		if(e.type == KeyPress){
 			//printf("%x\n", e.xkey.keycode);
+			float movestep = 0.01f;
 			switch(e.xkey.keycode){
 				case 0x71://left
-				cminx += 0.01f;
-				cmaxx += 0.01f;
+				cminx += movestep;
+				cmaxx += movestep;
 				break;
 				case 0x72://right
-				cminx -= 0.01f;
-				cmaxx -= 0.01f;
+				cminx -= movestep;
+				cmaxx -= movestep;
 				break;
 				case 0x6f://up
-				cminy += 0.01f;
-				cmaxy += 0.01f;
+				cminy += movestep;
+				cmaxy += movestep;
 				break;
 				case 0x74://down
-				cminy -= 0.01f;
-				cmaxy -= 0.01f;
+				cminy -= movestep;
+				cmaxy -= movestep;
+				break;
+				case 0x1b://r - render
+				calculatePixels(d, w, s, x);
+				break;
+				case 0x19://w - enable auto render (slower)
+				ar = ar ^ 1;
+				break;
+				case 0x27://s - save image
+				{
+					//save to ppm image
+					FILE *fp;
+					fp = fopen("f.ppm", "w+");
+					fprintf(fp, "P3\n%d %d\n255\n", rmaxx, rmaxy);
+					XImage *image;
+					XMapRaised(d, w);
+					XWindowAttributes attr;
+					Status status = XGetWindowAttributes(d, w, &attr);
+					image = XGetImage(d, w, 0, 0, attr.width, attr.height, AllPlanes, ZPixmap);
+					int i, j;
+					for(j = 0; j < attr.height; j++){
+						for(i = 0; i < attr.width; i++){
+							XColor color;
+							color.pixel = XGetPixel(image, i, j);
+							XQueryColor(d, XDefaultColormap(d, XDefaultScreen(d)), &color);
+							fprintf(fp, "%d %d %d\n", color.red/256, color.green/256, color.blue/256);
+						}
+					}
+					XFree(image);
+					fclose(fp);
+				}
 				break;
 				case 0x09://esc
 				return 0;
 				break;
 			}
 		}
-		calculatePixels(d, w, s, x);
+		if(ar){
+			calculatePixels(d, w, s, x);
+		}else{
+			XSetForeground(d, DefaultGC(d, s), _RGB(0,0,0));
+			XFillRectangle(d, w, DefaultGC(d, s), 0, 0, 200, 60);
+		}
+		char txt[100];
+		snprintf(txt, 100, "R limits: %f %f", cminx, cmaxx);
+		XSetForeground(d, DefaultGC(d, s), _RGB(255,255,255));
+		XDrawString(d, w, DefaultGC(d, s), 0, 30, txt, strlen(txt));
+		snprintf(txt, 100, "C limits: %f %f", cminy, cmaxy);
+		XDrawString(d, w, DefaultGC(d, s), 0, 50, txt, strlen(txt));
 	}
 
 	getchar();
