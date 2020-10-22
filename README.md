@@ -19,6 +19,8 @@ Keys:
 	R	-	Renders current position, calles calculatePixels, usage for manual render
 	W	-	Enable/Disable auto render
 	S	-	Save Image as f.ppm
+	C	-	Change function
+	D	-	Restore Complex Plane to Default
 	ESC	-	Exit
 
 For building the binaries just do

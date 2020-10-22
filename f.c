@@ -30,7 +30,7 @@ float cmaxx = 2.0f;
 float cminy = -2.0f;
 float cmaxy = 2.0f;
 
-//Real Plane limits
+//Real Plane limits / window
 int rminx = 0;
 int rmaxx = 800;
 
@@ -39,6 +39,10 @@ int rmaxy = 800;
 
 //save image counter
 int count = 0;
+
+//complex functions configuration
+int fflag = 0;
+int ncfunc = 7;
 
 void zoom(char c, int x, int y){
 	//xf and yf should be used to 'auto'-zoom
@@ -66,10 +70,10 @@ void calculatePixels(Display *d, Window w, int s, int x){
 	//float c = 0.245f;
 	//float c = map(rand(), 0, RAND_MAX, -1.0f, 1.0f);
 	float c = map(x, rminx, rmaxx, -1.0f, 1.0f);
-	printf("%f\n", c);
+	//printf("%f\n", c);
 	float r = 2.0f;
 
-	int maxiter = 30;
+	int maxiter = 50;
 
 	int i, j;
 	for(j = 0; j < rmaxy; j++){
@@ -92,8 +96,10 @@ void calculatePixels(Display *d, Window w, int s, int x){
 			//color = _RGB((int)(iter*cos(t*iter))%256, (int)(iter*iter*iter*sin(t))%256, (int)(iter*iter*iter*tan(t*iter))%256);
 			//color = _RGB((int)(iter*iter*cos(iter))%256, (int)(iter*iter*iter*sin(iter))%256, (int)(iter*iter*iter*tan(iter))%256);
 			//color = _RGB((int)(iter*iter)%256, (int)(iter*iter*iter)%256, (int)(iter*iter*iter)%256);
-			color = _RGB((int)(iter*iter*t)%256, (int)(iter*iter*iter*t)%256, (int)(iter*iter*iter*t)%256);
+			//color = _RGB((int)(iter*iter*t)%256, (int)(iter*iter*iter*t)%256, (int)(iter*iter*iter*t)%256);
+			//color = _RGB(0, (int)(iter*iter*iter*t)%256, 0);
 			//color = _RGB(iter%256, (int)(tan(iter)*255)%256, (int)(sin(iter)*255)%256);
+			color = _RGB(iter%256, t*iter%256, t*t*iter%256);
 			XSetForeground(d, DefaultGC(d, s), color);
 			XDrawPoint(d, w, DefaultGC(d, s), i, j);
 			iter = 0;
@@ -114,8 +120,24 @@ float map(int s, int a1, int a2, float b1, float b2){
 }
 
 float complex mandelbrot(float complex z, float c){
+	float complex zz = cimag(z) - creal(z) * I;
+	//complex functions
+	float complex cfunc[] = {
+		(z*z / zz*zz) + c,
+		(z*z*zz / zz*zz*z) + c,
+		z*zz + c,
+		zz*zz*z / z*zz + c,
+		z*z + c,
+		z*z*z + c,
+		z*z + 1/z + c
+	};
+	return cfunc[fflag];
+	//return (z*z / zz*zz) + c;
+	//return (z*z*zz / zz*zz*z) + c;
+	//return z*zz + c;
+	//return zz*zz*z / z*zz + c;
 	//return z*z + c
-	return z*z*z + c;
+	//return z*z*z + c;
 	//return z*z + 1/z + c;
 }
 
@@ -193,10 +215,13 @@ int main(int argc, char ** argv){
 				break;
 				case 0x27://s - save image
 				{
+					XSetForeground(d, DefaultGC(d, s), _RGB(255,255,255));
+					char * txt = "Saving image, please wait...";
+					XDrawString(d, w, DefaultGC(d, s), 0, 70, txt, strlen(txt));
 					//save to ppm image
 					FILE *fp;
-					char filename[10];
-					snprintf(filename, 10, "frac_%d.ppm", count);
+					char filename[20];
+					snprintf(filename, 20, "frac_%d.ppm", count);
 					count++;
 					fp = fopen(filename, "w+");
 					fprintf(fp, "P3\n%d %d\n255\n", rmaxx, rmaxy);
@@ -217,6 +242,16 @@ int main(int argc, char ** argv){
 					XFree(image);
 					fclose(fp);
 				}
+				break;
+				case 0x36://c - change return function
+				fflag++;
+				fflag = fflag%ncfunc;
+				break;
+				case 0x28://d - restore complex plane to default
+				cminx = -2.0f;
+				cmaxx = 2.0f;
+				cminy = -2.0f;
+				cmaxy = 2.0f;
 				break;
 				case 0x09://esc
 				return 0;
