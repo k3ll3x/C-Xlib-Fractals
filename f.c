@@ -42,7 +42,7 @@ int count = 0;
 
 //complex functions configuration
 int fflag = 0;
-int ncfunc = 7;
+int ncfunc = 11;
 
 void zoom(char c, int x, int y){
 	//xf and yf should be used to 'auto'-zoom
@@ -129,7 +129,11 @@ float complex mandelbrot(float complex z, float c){
 		zz*zz*z / z*zz + c,
 		z*z + c,
 		z*z*z + c,
-		z*z + 1/z + c
+		z*z + 1/z + c,
+		z*zz*z*zz + cos(c+z+zz),
+		zz*cos(z) + z*sin(zz) + tan(c),
+		cos(zz)/z*z + sin(z)/zz*zz - c,
+		zz*zz*zz*z*z*z - c + zz*z + cos(z+zz+c)
 	};
 	return cfunc[fflag];
 	//return (z*z / zz*zz) + c;
@@ -226,10 +230,10 @@ int main(int argc, char ** argv){
 					fp = fopen(filename, "w+");
 					fprintf(fp, "P3\n%d %d\n255\n", rmaxx, rmaxy);
 					XImage *image;
-					XMapRaised(d, w);
+					//XMapRaised(d, w);
 					XWindowAttributes attr;
 					Status status = XGetWindowAttributes(d, w, &attr);
-					image = XGetImage(d, w, 0, 0, attr.width, attr.height, AllPlanes, ZPixmap);
+					image = XGetImage(d, w, 0, 0, attr.width, attr.height, AllPlanes, XYPixmap);
 					int i, j;
 					for(j = 0; j < attr.height; j++){
 						for(i = 0; i < attr.width; i++){
