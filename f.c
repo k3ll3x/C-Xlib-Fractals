@@ -37,6 +37,9 @@ int rmaxx = 800;
 int rminy = 0;
 int rmaxy = 800;
 
+//save image counter
+int count = 0;
+
 void zoom(char c, int x, int y){
 	//xf and yf should be used to 'auto'-zoom
 	float xf = map(x, rminx, rmaxx, cminx, cmaxx);
@@ -192,7 +195,10 @@ int main(int argc, char ** argv){
 				{
 					//save to ppm image
 					FILE *fp;
-					fp = fopen("f.ppm", "w+");
+					char filename[10];
+					snprintf(filename, 10, "frac_%d.ppm", count);
+					count++;
+					fp = fopen(filename, "w+");
 					fprintf(fp, "P3\n%d %d\n255\n", rmaxx, rmaxy);
 					XImage *image;
 					XMapRaised(d, w);
