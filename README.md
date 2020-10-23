@@ -13,7 +13,7 @@ This is a simple C program that uses complex.h for manipulating complex numbers 
 Keys and Mouse:
 
 	Mouse Wheel		-	zoom in/out at pointer position
-	Right/Left Click	-	Chance 'c' value to pointer position
+	Right/Left Click	-	Change 'c' value to pointer position
 	left			-	moves Plane
 	right			-	moves Plane
 	up			-	moves Plane

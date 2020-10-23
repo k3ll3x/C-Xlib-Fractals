@@ -97,14 +97,14 @@ void calculatePixels(Display *d, Window w, int s, int x){
 
 			//print pixel by iterations
 			unsigned long color;
-			//color = _RGB((int)(iter*cos(t*iter))%256, (int)(iter*iter*iter*sin(t))%256, (int)(iter*iter*iter*tan(t*iter))%256);
+			color = _RGB((int)(iter*cos(t*iter))%256, (int)(iter*iter*iter*sin(t))%256, (int)(iter*iter*iter*tan(t*iter))%256);
 			//color = _RGB((int)(iter*iter*cos(iter))%256, (int)(iter*iter*iter*sin(iter))%256, (int)(iter*iter*iter*tan(iter))%256);
 			//color = _RGB((int)(iter*iter)%256, (int)(iter*iter*iter)%256, (int)(iter*iter*iter)%256);
 			//color = _RGB((int)(iter*iter*t)%256, (int)(iter*iter*iter*t)%256, (int)(iter*iter*iter*t)%256);
 			//color = _RGB(0, (int)(iter*iter*iter*t)%256, 0);
 			//color = _RGB(iter%256, (int)(tan(iter)*255)%256, (int)(sin(iter)*255)%256);
 			//color = _RGB(iter%256, t*iter%256, t*t*iter%256);
-			color = _RGB(iter*iter%256, iter*iter*iter%256, iter%256);
+			//color = _RGB(iter*iter%256, iter*iter*iter%256, iter%256);
 			XSetForeground(d, DefaultGC(d, s), color);
 			XDrawPoint(d, w, DefaultGC(d, s), i, j);
 			iter = 0;
