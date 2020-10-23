@@ -54,13 +54,13 @@ void zoom(char c, int x, int y){
 	//printf("%Lf %Lf\n", xf, yf);
 	
 	if(c == '-'){
-		movestep *= 2;
+		movestep += movestep/4;
 		cminx = (cminx - xf) * 2;
 		cmaxx = (cmaxx - xf) * 2;
 		cminy = (cminy - yf) * 2;
 		cmaxy = (cmaxy - yf) * 2;
 	}else if(c == '+'){
-		movestep /= 2;
+		movestep -= movestep/4;
 		cminx = (cminx + xf) / 2;
 		cmaxx = (cmaxx + xf) / 2;
 		cminy = (cminy + yf) / 2;
