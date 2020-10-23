@@ -16,19 +16,19 @@
 
 /*Functions Signature*/
 int main(int argc, char ** argv);
-float complex mandelbrot(float complex z, float c);
-float map(int s, int a1, int a2, float b1, float b2);
+long double complex mandelbrot(long double complex z, long double c);
+long double map(int s, int a1, int a2, long double b1, long double b2);
 unsigned long _RGB(int r,int g, int b);
 void calculatePixels(Display *d, Window w, int s, int x);
 void zoom(char c, int x, int y);
 
 //not good practice to make global variables
 //Complex Plane Limits
-float cminx = -2.0f;
-float cmaxx = 2.0f;
+long double cminx = -2.0f;
+long double cmaxx = 2.0f;
 
-float cminy = -2.0f;
-float cmaxy = 2.0f;
+long double cminy = -2.0f;
+long double cmaxy = 2.0f;
 
 //Real Plane limits / window
 int rminx = 0;
@@ -44,23 +44,27 @@ int count = 0;
 int fflag = 0;
 int ncfunc = 11;
 
+//moving variable
+float movestep = 0.01f;
+
 void zoom(char c, int x, int y){
 	//xf and yf should be used to 'auto'-zoom
-	float xf = map(x, rminx, rmaxx, cminx, cmaxx);
-	float yf = map(y, rminy, rmaxy, cminy, cmaxy);
-
-	float zoomstep = 0.1f;
+	long double xf = map(x, rminx, rmaxx, cminx, cmaxx);
+	long double yf = map(y, rminy, rmaxy, cminy, cmaxy);
+	//printf("%Lf %Lf\n", xf, yf);
 	
 	if(c == '-'){
-		cminx -= zoomstep;
-		cmaxx += zoomstep;
-		cminy -= zoomstep;
-		cmaxy += zoomstep;
+		movestep += 0.05f;
+		cminx = (cminx - xf) * 2;
+		cmaxx = (cmaxx - xf) * 2;
+		cminy = (cminy - yf) * 2;
+		cmaxy = (cmaxy - yf) * 2;
 	}else if(c == '+'){
-		cminx += zoomstep;
-		cmaxx -= zoomstep;
-		cminy += zoomstep;
-		cmaxy -= zoomstep;
+		movestep -= 0.05f;
+		cminx = (cminx + xf) / 2;
+		cmaxx = (cmaxx + xf) / 2;
+		cminy = (cminy + yf) / 2;
+		cmaxy = (cmaxy + yf) / 2;
 	}
 }
 
@@ -69,8 +73,8 @@ void calculatePixels(Display *d, Window w, int s, int x){
 	
 	//float c = 0.245f;
 	//float c = map(rand(), 0, RAND_MAX, -1.0f, 1.0f);
-	float c = map(x, rminx, rmaxx, -1.0f, 1.0f);
-	//printf("%f\n", c);
+	long double c = map(x, rminx, rmaxx, -1.0f, 1.0f);
+	//printf("%Lf\n", c);
 	float r = 2.0f;
 
 	int maxiter = 50;
@@ -78,10 +82,10 @@ void calculatePixels(Display *d, Window w, int s, int x){
 	int i, j;
 	for(j = 0; j < rmaxy; j++){
 		for(i = 0; i < rmaxx; i++){
-			float real = map(i, rminx, rmaxx, cminx, cmaxx);
-			float imag = map(j, rminy, rmaxy, cminy, cmaxy);
+			long double real = map(i, rminx, rmaxx, cminx, cmaxx);
+			long double imag = map(j, rminy, rmaxy, cminy, cmaxy);
 			
-			float complex z = real + imag * I;
+			long double complex z = real + imag * I;
 			z = mandelbrot(z, c);
 
 			int iter = 0;
@@ -99,14 +103,15 @@ void calculatePixels(Display *d, Window w, int s, int x){
 			//color = _RGB((int)(iter*iter*t)%256, (int)(iter*iter*iter*t)%256, (int)(iter*iter*iter*t)%256);
 			//color = _RGB(0, (int)(iter*iter*iter*t)%256, 0);
 			//color = _RGB(iter%256, (int)(tan(iter)*255)%256, (int)(sin(iter)*255)%256);
-			color = _RGB(iter%256, t*iter%256, t*t*iter%256);
+			//color = _RGB(iter%256, t*iter%256, t*t*iter%256);
+			color = _RGB(iter*iter%256, iter*iter*iter%256, iter%256);
 			XSetForeground(d, DefaultGC(d, s), color);
 			XDrawPoint(d, w, DefaultGC(d, s), i, j);
 			iter = 0;
 		}
 	}
 	char txt[20];
-	snprintf(txt, 20, "c = %f", c);
+	snprintf(txt, 20, "c = %Lf", c);
 	XSetForeground(d, DefaultGC(d, s), _RGB(255,255,255));
 	XDrawString(d, w, DefaultGC(d, s), 0, 10, txt, strlen(txt));
 }
@@ -115,14 +120,14 @@ unsigned long _RGB(int r,int g, int b){
 	return b + (g<<8) + (r<<16);
 }
 
-float map(int s, int a1, int a2, float b1, float b2){
+long double map(int s, int a1, int a2, long double b1, long double b2){
 	return b1 + (s-a1)*(b2-b1)/(a2-a1);
 }
 
-float complex mandelbrot(float complex z, float c){
-	float complex zz = cimag(z) - creal(z) * I;
+long double complex mandelbrot(long double complex z, long double c){
+	long double complex zz = cimag(z) - creal(z) * I;
 	//complex functions
-	float complex cfunc[] = {
+	long double complex cfunc[] = {
 		(z*z / zz*zz) + c,
 		(z*z*zz / zz*zz*z) + c,
 		z*zz + c,
@@ -193,15 +198,14 @@ int main(int argc, char ** argv){
 		}
 		if(e.type == KeyPress){
 			//printf("%x\n", e.xkey.keycode);
-			float movestep = 0.01f;
 			switch(e.xkey.keycode){
 				case 0x71://left
-				cminx += movestep;
-				cmaxx += movestep;
-				break;
-				case 0x72://right
 				cminx -= movestep;
 				cmaxx -= movestep;
+				break;
+				case 0x72://right
+				cminx += movestep;
+				cmaxx += movestep;
 				break;
 				case 0x6f://up
 				cminy += movestep;
@@ -225,7 +229,7 @@ int main(int argc, char ** argv){
 					//save to ppm image
 					FILE *fp;
 					char filename[20];
-					snprintf(filename, 20, "frac_%d.ppm", count);
+					snprintf(filename, 20, "img/frac_%d.ppm", count);
 					count++;
 					fp = fopen(filename, "w+");
 					fprintf(fp, "P3\n%d %d\n255\n", rmaxx, rmaxy);
@@ -269,10 +273,10 @@ int main(int argc, char ** argv){
 			XFillRectangle(d, w, DefaultGC(d, s), 0, 0, 200, 60);
 		}
 		char txt[100];
-		snprintf(txt, 100, "R limits: %f %f", cminx, cmaxx);
+		snprintf(txt, 100, "R limits: %Lf %Lf", cminx, cmaxx);
 		XSetForeground(d, DefaultGC(d, s), _RGB(255,255,255));
 		XDrawString(d, w, DefaultGC(d, s), 0, 30, txt, strlen(txt));
-		snprintf(txt, 100, "C limits: %f %f", cminy, cmaxy);
+		snprintf(txt, 100, "C limits: %Lf %Lf", cminy, cmaxy);
 		XDrawString(d, w, DefaultGC(d, s), 0, 50, txt, strlen(txt));
 	}
 
