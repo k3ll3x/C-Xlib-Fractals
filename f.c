@@ -45,7 +45,7 @@ int fflag = 0;
 int ncfunc = 11;
 
 //moving variable
-float movestep = 0.01f;
+long double movestep = 0.01f;
 
 void zoom(char c, int x, int y){
 	//xf and yf should be used to 'auto'-zoom
@@ -54,13 +54,13 @@ void zoom(char c, int x, int y){
 	//printf("%Lf %Lf\n", xf, yf);
 	
 	if(c == '-'){
-		movestep += 0.05f;
+		movestep *= 2;
 		cminx = (cminx - xf) * 2;
 		cmaxx = (cmaxx - xf) * 2;
 		cminy = (cminy - yf) * 2;
 		cmaxy = (cmaxy - yf) * 2;
 	}else if(c == '+'){
-		movestep -= 0.05f;
+		movestep /= 2;
 		cminx = (cminx + xf) / 2;
 		cmaxx = (cmaxx + xf) / 2;
 		cminy = (cminy + yf) / 2;
@@ -231,12 +231,11 @@ int main(int argc, char ** argv){
 					char filename[20];
 					snprintf(filename, 20, "img/frac_%d.ppm", count);
 					count++;
-					fp = fopen(filename, "w+");
-					fprintf(fp, "P3\n%d %d\n255\n", rmaxx, rmaxy);
-					XImage *image;
-					//XMapRaised(d, w);
 					XWindowAttributes attr;
 					Status status = XGetWindowAttributes(d, w, &attr);
+					fp = fopen(filename, "w+");
+					fprintf(fp, "P3\n%d %d\n255\n", attr.width, attr.height);
+					XImage *image;
 					image = XGetImage(d, w, 0, 0, attr.width, attr.height, AllPlanes, XYPixmap);
 					int i, j;
 					for(j = 0; j < attr.height; j++){
