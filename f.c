@@ -16,13 +16,26 @@
 
 /*Functions Signature*/
 int main(int argc, char ** argv);
-long double complex mandelbrot(long double complex z, long double c);
-long double map(int s, int a1, int a2, long double b1, long double b2);
-unsigned long _RGB(int r,int g, int b);
-void calculatePixels(Display *d, Window w, int s, int x);
-void zoom(char c, int x, int y);
+long double complex mandelbrot(long double complex * z, long double * c);
+long double map(int * s, int * a1, int * a2, long double * b1, long double * b2);
+unsigned long _RGB(unsigned char r, unsigned char g, unsigned char b);
+void calculatePixels(Display * d, Window * w, int * s, int * x);
+void zoom(char * c, int * x, int * y);
 
 //not good practice to make global variables
+
+//complex numbers
+long double complex zz;
+long double complex z;
+
+//parts of complex numbers for mapping
+long double real;
+long double imag;
+
+//complex functions configuration
+int fflag = 0;
+int ncfunc = 11;
+
 //Complex Plane Limits
 long double cminx = -2.0f;
 long double cmaxx = 2.0f;
@@ -40,26 +53,22 @@ int rmaxy = 800;
 //save image counter
 int count = 0;
 
-//complex functions configuration
-int fflag = 0;
-int ncfunc = 11;
-
 //moving variable
 long double movestep = 0.01f;
 
-void zoom(char c, int x, int y){
-	//xf and yf should be used to 'auto'-zoom
-	long double xf = map(x, rminx, rmaxx, cminx, cmaxx);
-	long double yf = map(y, rminy, rmaxy, cminy, cmaxy);
+void zoom(char * c, int * x, int * y){
+	//xf and yf should be used to 'auto' zoom
+	long double xf = map(&*x, &rminx, &rmaxx, &cminx, &cmaxx);
+	long double yf = map(&*y, &rminy, &rmaxy, &cminy, &cmaxy);
 	//printf("%Lf %Lf\n", xf, yf);
 	
-	if(c == '-'){
+	if(*c == '-'){
 		movestep += movestep/4;
 		cminx = (cminx - xf) * 2;
 		cmaxx = (cmaxx - xf) * 2;
 		cminy = (cminy - yf) * 2;
 		cmaxy = (cmaxy - yf) * 2;
-	}else if(c == '+'){
+	}else if(*c == '+'){
 		movestep -= movestep/4;
 		cminx = (cminx + xf) / 2;
 		cmaxx = (cmaxx + xf) / 2;
@@ -68,12 +77,14 @@ void zoom(char c, int x, int y){
 	}
 }
 
-void calculatePixels(Display *d, Window w, int s, int x){
+void calculatePixels(Display * d, Window * w, int * s, int * x){
 	int t = time(NULL);
 	
 	//float c = 0.245f;
 	//float c = map(rand(), 0, RAND_MAX, -1.0f, 1.0f);
-	long double c = map(x, rminx, rmaxx, -1.0f, 1.0f);
+	long double a = -1.0f;
+	long double b = 1.0f;
+	long double c = map(&*x, &rminx, &rmaxx, &a, &b);
 	//printf("%Lf\n", c);
 	float r = 2.0f;
 
@@ -82,15 +93,15 @@ void calculatePixels(Display *d, Window w, int s, int x){
 	int i, j;
 	for(j = 0; j < rmaxy; j++){
 		for(i = 0; i < rmaxx; i++){
-			long double real = map(i, rminx, rmaxx, cminx, cmaxx);
-			long double imag = map(j, rminy, rmaxy, cminy, cmaxy);
+			real = map(&i, &rminx, &rmaxx, &cminx, &cmaxx);
+			imag = map(&j, &rminy, &rmaxy, &cminy, &cmaxy);
 			
-			long double complex z = real + imag * I;
-			z = mandelbrot(z, c);
+			z = real + imag * I;
+			z = mandelbrot(&z, &c);
 
 			int iter = 0;
 			while(cabs(z) <= r){
-				z = mandelbrot(z, c);
+				z = mandelbrot(&z, &c);
 				if(iter >= maxiter) break;
 				iter++;
 			}
@@ -105,28 +116,92 @@ void calculatePixels(Display *d, Window w, int s, int x){
 			//color = _RGB(iter%256, (int)(tan(iter)*255)%256, (int)(sin(iter)*255)%256);
 			//color = _RGB(iter%256, t*iter%256, t*t*iter%256);
 			//color = _RGB(iter*iter%256, iter*iter*iter%256, iter%256);
-			XSetForeground(d, DefaultGC(d, s), color);
-			XDrawPoint(d, w, DefaultGC(d, s), i, j);
+			XSetForeground(d, DefaultGC(d, *s), color);
+			XDrawPoint(d, *w, DefaultGC(d, *s), i, j);
 			iter = 0;
 		}
 	}
 	char txt[20];
 	snprintf(txt, 20, "c = %Lf", c);
-	XSetForeground(d, DefaultGC(d, s), _RGB(255,255,255));
-	XDrawString(d, w, DefaultGC(d, s), 0, 10, txt, strlen(txt));
+	XSetForeground(d, DefaultGC(d, *s), _RGB(255,255,255));
+	XDrawString(d, *w, DefaultGC(d, *s), 0, 10, txt, strlen(txt));
 }
 
-unsigned long _RGB(int r,int g, int b){
+unsigned long _RGB(unsigned char r, unsigned char g, unsigned char b){
 	return b + (g<<8) + (r<<16);
 }
 
-long double map(int s, int a1, int a2, long double b1, long double b2){
-	return b1 + (s-a1)*(b2-b1)/(a2-a1);
+long double map(int * s, int * a1, int * a2, long double * b1, long double * b2){
+	return *b1 + (*s-*a1)*(*b2-*b1)/(*a2-*a1);
 }
 
-long double complex mandelbrot(long double complex z, long double c){
-	long double complex zz = cimag(z) - creal(z) * I;
-	//complex functions
+long double complex mandelbrot(long double complex * z, long double * c){
+	zz = cimag(*z) - creal(*z) * I;
+	switch(fflag){
+		case 0:
+		//(z*z / zz*zz) + c
+		return (*z**z / zz*zz) + *c;
+		break;
+		case 1:
+		//(z*z*zz / zz*zz*z) + c
+		return (*z**z*zz / zz*zz**z) + *c;
+		break;
+		case 2:
+		//z*zz + c
+		return *z*zz + *c;
+		break;
+		case 3:
+		//zz*zz*z / z*zz + c
+		return zz*zz**z / *z*zz + *c;
+		break;
+		case 4:
+		//z*z + c
+		return *z**z + *c;
+		break;
+		case 5:
+		//z*z*z + c
+		return *z**z**z + *c;
+		break;
+		case 6:
+		//z*z + 1/z + c
+		return *z**z + 1 / *z + *c;
+		break;
+		case 7:
+		//z*zz*z*zz + cos(c+z+zz)
+		return *z*zz**z*zz + cos(*c+*z+zz);
+		break;
+		case 8:
+		//zz*cos(z) + z*sin(zz) + tan(c)
+		return zz*cos(*z) + *z*sin(zz) + tan(*c);
+		break;
+		case 9:
+		//cos(zz)/z*z + sin(z)/zz*zz - c
+		return cos(zz) / *z**z + sin(*z)/zz*zz - *c;
+		break;
+		case 10:
+		//zz*zz*zz*z*z*z - c + zz*z + cos(z+zz+c)
+		return zz*zz*zz**z**z**z - *c + zz**z + cos(*z+zz+*c);
+		break;
+		default:
+		//z + c
+		return *z + *c;
+		break;
+	}
+	/*fractal/complex functions
+	long double complex cfunc[] = {
+		(*z**z / zz*zz) + *c,
+		(*z**z*zz / zz*zz**z) + *c,
+		*z*zz + *c,
+		zz*zz**z / *z*zz + *c,
+		*z**z + *c,
+		*z**z**z + *c,
+		*z**z + 1 / *z + *c,
+		*z*zz**z*zz + cos(*c+*z+zz),
+		zz*cos(*z) + *z*sin(zz) + tan(*c),
+		cos(zz) / *z**z + sin(*z)/zz*zz - *c,
+		zz*zz*zz**z**z**z - *c + zz**z + cos(*z+zz+*c)
+	};*/
+	/*fractal/complex functions
 	long double complex cfunc[] = {
 		(z*z / zz*zz) + c,
 		(z*z*zz / zz*zz*z) + c,
@@ -139,8 +214,11 @@ long double complex mandelbrot(long double complex z, long double c){
 		zz*cos(z) + z*sin(zz) + tan(c),
 		cos(zz)/z*z + sin(z)/zz*zz - c,
 		zz*zz*zz*z*z*z - c + zz*z + cos(z+zz+c)
-	};
-	return cfunc[fflag];
+	};*/
+
+	//return cfunc[fflag];
+	//return (*z**z / zz * zz) + *c;
+
 	//return (z*z / zz*zz) + c;
 	//return (z*z*zz / zz*zz*z) + c;
 	//return z*zz + c;
@@ -187,10 +265,16 @@ int main(int argc, char ** argv){
 					y=e.xbutton.y;
 				break;
 				case Button4:
-					zoom('+', e.xbutton.x, e.xbutton.y);
+				{
+					char zc = '+';
+					zoom(&zc, &e.xbutton.x, &e.xbutton.y);
+				}
 				break;
 				case Button5:
-					zoom('-', e.xbutton.x, e.xbutton.y);
+				{
+					char zc = '-';
+					zoom(&zc, &e.xbutton.x, &e.xbutton.y);
+				}
 				break;
 				default:
 				break;
@@ -216,7 +300,7 @@ int main(int argc, char ** argv){
 				cmaxy -= movestep;
 				break;
 				case 0x1b://r - render
-				calculatePixels(d, w, s, x);
+				calculatePixels(d, &w, &s, &x);
 				break;
 				case 0x19://w - enable auto render (slower)
 				ar = ar ^ 1;
@@ -266,7 +350,7 @@ int main(int argc, char ** argv){
 			}
 		}
 		if(ar){
-			calculatePixels(d, w, s, x);
+			calculatePixels(d, &w, &s, &x);
 		}else{
 			XSetForeground(d, DefaultGC(d, s), _RGB(0,0,0));
 			XFillRectangle(d, w, DefaultGC(d, s), 0, 0, 200, 60);
