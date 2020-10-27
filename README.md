@@ -23,6 +23,7 @@ Keys and Mouse:
 	S			-	Save Image as f.ppm
 	C			-	Change function
 	D			-	Restore Complex Plane to Default
+	A			-	Change Color set
 	ESC			-	Exit
 
 For building the binaries just do

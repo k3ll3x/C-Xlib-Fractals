@@ -30,7 +30,7 @@ float pi = 3.14159f;
 
 //color changer
 int clrset = 0;
-int nclrset = 8;
+int nclrset = 10;
 
 //complex numbers
 long double complex z;
@@ -70,10 +70,10 @@ void zoom(char * c, int * x, int * y){
 	
 	if(*c == '-'){
 		movestep += movestep/3;
-		cminx = (cminx - xf) * 2;
-		cmaxx = (cmaxx - xf) * 2;
-		cminy = (cminy - yf) * 2;
-		cmaxy = (cmaxy - yf) * 2;
+		cminx = (cminx * 2 - xf);
+		cmaxx = (cmaxx * 2 - xf);
+		cminy = (cminy * 2 - yf);
+		cmaxy = (cmaxy * 2 - yf);
 	}else if(*c == '+'){
 		movestep -= movestep/3;
 		cminx = (cminx + xf) / 2;
@@ -92,7 +92,7 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 	//printf("%Lf\n", c);
 	float r = 2.0f;
 
-	int maxiter = 50;
+	int maxiter = 100;
 
 	int i, j;
 	int iter = 0;
@@ -140,6 +140,12 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 					break;
 					case 7:
 					color = _RGB((int)(iter*cos(t*iter))%256, (int)(iter*iter*iter*sin(t))%256, (int)(iter*iter*iter*tan(t*iter))%256);
+					break;
+					case 8:
+					color = _RGB((int)(iter*creal(z))%256, (int)(iter*cimag(z))%256, (int)(cos(z)*iter)%256);
+					break;
+					case 9:
+					color = _RGB((iter*iter*iter)%256, (iter*iter)%256, iter%256);
 					break;
 				}
 
@@ -270,7 +276,8 @@ int main(int argc, char ** argv){
 			//printf("%x\n", e.xkey.keycode);
 			switch(e.xkey.keycode){
 				case 0x26://a - change color set
-				clrset = clrset++ % nclrset;
+				clrset++;
+				clrset %= nclrset;
 				break;
 				case 0x71://left
 				cminx -= movestep;
