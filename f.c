@@ -294,12 +294,12 @@ int main(int argc, char ** argv){
 				cmaxx += movestepx;
 				break;
 				case 0x6f://up
-				cminy += movestepy;
-				cmaxy += movestepy;
-				break;
-				case 0x74://down
 				cminy -= movestepy;
 				cmaxy -= movestepy;
+				break;
+				case 0x74://down
+				cminy += movestepy;
+				cmaxy += movestepy;
 				break;
 				case 0x1b://r - render
 				calculatePixels(d, &w, &s, &x);
