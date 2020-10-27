@@ -61,7 +61,7 @@ int rmaxy = 800;
 int count = 0;
 
 //moving variable
-long double movestep = 0.01f;
+long double movestepx, movestepy;
 
 void zoom(char * c, int * x, int * y){
 	long double xf = map(&*x, &rminx, &rmaxx, &cminx, &cmaxx);
@@ -69,18 +69,20 @@ void zoom(char * c, int * x, int * y){
 	//printf("%Lf %Lf\n", xf, yf);
 	
 	if(*c == '-'){
-		movestep += movestep/3;
+		//movestep += movestep/3;
 		cminx = (cminx * 2 - xf);
 		cmaxx = (cmaxx * 2 - xf);
 		cminy = (cminy * 2 - yf);
 		cmaxy = (cmaxy * 2 - yf);
 	}else if(*c == '+'){
-		movestep -= movestep/3;
+		//movestep -= movestep/3;
 		cminx = (cminx + xf) / 2;
 		cmaxx = (cmaxx + xf) / 2;
 		cminy = (cminy + yf) / 2;
 		cmaxy = (cmaxy + yf) / 2;
 	}
+	movestepx = (cmaxx - cminx) / 16;
+	movestepy = (cmaxy - cminy) / 16;
 }
 
 void calculatePixels(Display * d, Window * w, int * s, int * x){
@@ -223,6 +225,10 @@ long double complex mandelbrot(long double complex * z, long double * c){
 int main(int argc, char ** argv){	
 	//random seed, time
 	srand(time(NULL));
+
+	//set moving step for x and y
+	movestepx = (cmaxx - cminx) / 16;
+	movestepy = (cmaxy - cminy) / 16;
 	
 	Display *d;
 	Window w;
@@ -280,20 +286,20 @@ int main(int argc, char ** argv){
 				clrset %= nclrset;
 				break;
 				case 0x71://left
-				cminx -= movestep;
-				cmaxx -= movestep;
+				cminx -= movestepx;
+				cmaxx -= movestepx;
 				break;
 				case 0x72://right
-				cminx += movestep;
-				cmaxx += movestep;
+				cminx += movestepx;
+				cmaxx += movestepx;
 				break;
 				case 0x6f://up
-				cminy += movestep;
-				cmaxy += movestep;
+				cminy += movestepy;
+				cmaxy += movestepy;
 				break;
 				case 0x74://down
-				cminy -= movestep;
-				cmaxy -= movestep;
+				cminy -= movestepy;
+				cmaxy -= movestepy;
 				break;
 				case 0x1b://r - render
 				calculatePixels(d, &w, &s, &x);
