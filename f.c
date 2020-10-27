@@ -13,6 +13,7 @@
 #include <complex.h>
 #include <math.h>
 #include <time.h>
+#include <omp.h>
 
 /*Functions Signature*/
 int main(int argc, char ** argv);
@@ -24,8 +25,14 @@ void zoom(char * c, int * x, int * y);
 
 //not good practice to make global variables
 
+//PI
+float pi = 3.14159f;
+
+//color changer
+int clrset = 0;
+int nclrset = 8;
+
 //complex numbers
-long double complex zz;
 long double complex z;
 
 //parts of complex numbers for mapping
@@ -34,7 +41,7 @@ long double imag;
 
 //complex functions configuration
 int fflag = 0;
-int ncfunc = 11;
+int ncfunc = 12;
 
 //Complex Plane Limits
 long double cminx = -2.0f;
@@ -57,19 +64,18 @@ int count = 0;
 long double movestep = 0.01f;
 
 void zoom(char * c, int * x, int * y){
-	//xf and yf should be used to 'auto' zoom
 	long double xf = map(&*x, &rminx, &rmaxx, &cminx, &cmaxx);
 	long double yf = map(&*y, &rminy, &rmaxy, &cminy, &cmaxy);
 	//printf("%Lf %Lf\n", xf, yf);
 	
 	if(*c == '-'){
-		movestep += movestep/4;
+		movestep += movestep/3;
 		cminx = (cminx - xf) * 2;
 		cmaxx = (cmaxx - xf) * 2;
 		cminy = (cminy - yf) * 2;
 		cmaxy = (cmaxy - yf) * 2;
 	}else if(*c == '+'){
-		movestep -= movestep/4;
+		movestep -= movestep/3;
 		cminx = (cminx + xf) / 2;
 		cmaxx = (cmaxx + xf) / 2;
 		cminy = (cminy + yf) / 2;
@@ -80,8 +86,6 @@ void zoom(char * c, int * x, int * y){
 void calculatePixels(Display * d, Window * w, int * s, int * x){
 	int t = time(NULL);
 	
-	//float c = 0.245f;
-	//float c = map(rand(), 0, RAND_MAX, -1.0f, 1.0f);
 	long double a = -1.0f;
 	long double b = 1.0f;
 	long double c = map(&*x, &rminx, &rmaxx, &a, &b);
@@ -91,34 +95,60 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 	int maxiter = 50;
 
 	int i, j;
-	for(j = 0; j < rmaxy; j++){
-		for(i = 0; i < rmaxx; i++){
-			real = map(&i, &rminx, &rmaxx, &cminx, &cmaxx);
-			imag = map(&j, &rminy, &rmaxy, &cminy, &cmaxy);
-			
-			z = real + imag * I;
-			z = mandelbrot(&z, &c);
-
-			int iter = 0;
-			while(cabs(z) <= r){
+	int iter = 0;
+	unsigned long color;
+	#pragma omp parallel shared(d,s,w) private(z, j, i, real, imag, color, iter)
+	{
+	#pragma omp for
+		for(j = 0; j < rmaxy; j++){
+			for(i = 0; i < rmaxx; i++){
+				real = map(&i, &rminx, &rmaxx, &cminx, &cmaxx);
+				imag = map(&j, &rminy, &rmaxy, &cminy, &cmaxy);
+				
+				z = real + imag * I;
 				z = mandelbrot(&z, &c);
-				if(iter >= maxiter) break;
-				iter++;
-			}
 
-			//print pixel by iterations
-			unsigned long color;
-			color = _RGB((int)(iter*cos(t*iter))%256, (int)(iter*iter*iter*sin(t))%256, (int)(iter*iter*iter*tan(t*iter))%256);
-			//color = _RGB((int)(iter*iter*cos(iter))%256, (int)(iter*iter*iter*sin(iter))%256, (int)(iter*iter*iter*tan(iter))%256);
-			//color = _RGB((int)(iter*iter)%256, (int)(iter*iter*iter)%256, (int)(iter*iter*iter)%256);
-			//color = _RGB((int)(iter*iter*t)%256, (int)(iter*iter*iter*t)%256, (int)(iter*iter*iter*t)%256);
-			//color = _RGB(0, (int)(iter*iter*iter*t)%256, 0);
-			//color = _RGB(iter%256, (int)(tan(iter)*255)%256, (int)(sin(iter)*255)%256);
-			//color = _RGB(iter%256, t*iter%256, t*t*iter%256);
-			//color = _RGB(iter*iter%256, iter*iter*iter%256, iter%256);
-			XSetForeground(d, DefaultGC(d, *s), color);
-			XDrawPoint(d, *w, DefaultGC(d, *s), i, j);
-			iter = 0;
+				iter = 0;
+				while(cabs(z) <= r){
+					z = mandelbrot(&z, &c);
+					if(iter >= maxiter) break;
+					iter++;
+				}
+
+				//print pixel by iterations
+				switch(clrset){
+					case 0:
+					color = _RGB(iter*iter%256, iter*iter*iter%256, iter%256);
+					break;
+					case 1:
+					color = _RGB((int)(iter*iter*cos(iter))%256, (int)(iter*iter*iter*sin(iter))%256, (int)(iter*iter*iter*tan(iter))%256);
+					break;
+					case 2:
+					color = _RGB((int)(iter*iter)%256, (int)(iter*iter*iter)%256, (int)(iter*iter*iter)%256);
+					break;
+					case 3:
+					color = _RGB((int)(iter*iter*t)%256, (int)(iter*iter*iter*t)%256, (int)(iter*iter*iter*t)%256);
+					break;
+					case 4:
+					color = _RGB(0, (int)(iter*iter*iter*t)%256, 0);
+					break;
+					case 5:
+					color = _RGB(iter%256, (int)(tan(iter)*255)%256, (int)(sin(iter)*255)%256);
+					break;
+					case 6:
+					color = _RGB(iter%256, t*iter%256, t*t*iter%256);
+					break;
+					case 7:
+					color = _RGB((int)(iter*cos(t*iter))%256, (int)(iter*iter*iter*sin(t))%256, (int)(iter*iter*iter*tan(t*iter))%256);
+					break;
+				}
+
+				#pragma omp critical
+				{
+					XSetForeground(d, DefaultGC(d, *s), color);
+					XDrawPoint(d, *w, DefaultGC(d, *s), i, j);
+				}
+			}
 		}
 	}
 	char txt[20];
@@ -136,96 +166,52 @@ long double map(int * s, int * a1, int * a2, long double * b1, long double * b2)
 }
 
 long double complex mandelbrot(long double complex * z, long double * c){
-	zz = cimag(*z) - creal(*z) * I;
 	switch(fflag){
 		case 0:
-		//(z*z / zz*zz) + c
-		return (*z**z / zz*zz) + *c;
-		break;
-		case 1:
-		//(z*z*zz / zz*zz*z) + c
-		return (*z**z*zz / zz*zz**z) + *c;
-		break;
-		case 2:
-		//z*zz + c
-		return *z*zz + *c;
-		break;
-		case 3:
-		//zz*zz*z / z*zz + c
-		return zz*zz**z / *z*zz + *c;
-		break;
-		case 4:
 		//z*z + c
 		return *z**z + *c;
 		break;
+		case 1:
+		//z*z*sqrt(z*c) - sinh(z+c)
+		return *z**z*csqrtl(*z**c) - csinhl(*z+*c);
+		break;
+		case 2:
+		//cos(z - c) * c - z-z*z*z*-z / z * asin(c)*z*atanl(c / z) - c
+		return ccoshl(*z-*c) * *c - *z-*z**z**z*-*z / *z*casinhl(*c)**z*catanl(*c / *z) - *c;
+		break;
+		case 3:
+		return ccoshl(*z) * csinhl(*z) * ctanhl(*z) * cpowl(*z, *z) + *c;
+		break;
+		case 4:
+		//z* (cimag(z) - creal(z) * I) + c * cos(z * c)
+		return *z* (cimag(*z) - creal(*z) * I) + *c * cos(*z * *c);
+		break;
 		case 5:
-		//z*z*z + c
-		return *z**z**z + *c;
+		return cpowl(*z, *z) + *c;
 		break;
 		case 6:
-		//z*z + 1/z + c
-		return *z**z + 1 / *z + *c;
+		return cimag(*z) - creal(*z) * I + sin(*z**z**z**z**z**c**c**c);
 		break;
 		case 7:
-		//z*zz*z*zz + cos(c+z+zz)
-		return *z*zz**z*zz + cos(*c+*z+zz);
+		return *z**z**z + cos(*z**z**z**c) - sin(*c**c**c**z);
 		break;
 		case 8:
-		//zz*cos(z) + z*sin(zz) + tan(c)
-		return zz*cos(*z) + *z*sin(zz) + tan(*c);
+		return cos(*z**z**c**c**c) + sin(*c**c**z**z**z) * I - *c;
 		break;
 		case 9:
-		//cos(zz)/z*z + sin(z)/zz*zz - c
-		return cos(zz) / *z**z + sin(*z)/zz*zz - *c;
+		return *z**z**z - *c;
 		break;
 		case 10:
-		//zz*zz*zz*z*z*z - c + zz*z + cos(z+zz+c)
-		return zz*zz*zz**z**z**z - *c + zz**z + cos(*z+zz+*c);
+		return *z * (creal(*z) - tan(cimag(*z) * *c + *c) * I);
+		break;
+		case 11:
+		return ctanhl(*z) + ccoshl(*z) - *c;
 		break;
 		default:
 		//z + c
 		return *z + *c;
 		break;
 	}
-	/*fractal/complex functions
-	long double complex cfunc[] = {
-		(*z**z / zz*zz) + *c,
-		(*z**z*zz / zz*zz**z) + *c,
-		*z*zz + *c,
-		zz*zz**z / *z*zz + *c,
-		*z**z + *c,
-		*z**z**z + *c,
-		*z**z + 1 / *z + *c,
-		*z*zz**z*zz + cos(*c+*z+zz),
-		zz*cos(*z) + *z*sin(zz) + tan(*c),
-		cos(zz) / *z**z + sin(*z)/zz*zz - *c,
-		zz*zz*zz**z**z**z - *c + zz**z + cos(*z+zz+*c)
-	};*/
-	/*fractal/complex functions
-	long double complex cfunc[] = {
-		(z*z / zz*zz) + c,
-		(z*z*zz / zz*zz*z) + c,
-		z*zz + c,
-		zz*zz*z / z*zz + c,
-		z*z + c,
-		z*z*z + c,
-		z*z + 1/z + c,
-		z*zz*z*zz + cos(c+z+zz),
-		zz*cos(z) + z*sin(zz) + tan(c),
-		cos(zz)/z*z + sin(z)/zz*zz - c,
-		zz*zz*zz*z*z*z - c + zz*z + cos(z+zz+c)
-	};*/
-
-	//return cfunc[fflag];
-	//return (*z**z / zz * zz) + *c;
-
-	//return (z*z / zz*zz) + c;
-	//return (z*z*zz / zz*zz*z) + c;
-	//return z*zz + c;
-	//return zz*zz*z / z*zz + c;
-	//return z*z + c
-	//return z*z*z + c;
-	//return z*z + 1/z + c;
 }
 
 int main(int argc, char ** argv){	
@@ -283,6 +269,9 @@ int main(int argc, char ** argv){
 		if(e.type == KeyPress){
 			//printf("%x\n", e.xkey.keycode);
 			switch(e.xkey.keycode){
+				case 0x26://a - change color set
+				clrset = clrset++ % nclrset;
+				break;
 				case 0x71://left
 				cminx -= movestep;
 				cmaxx -= movestep;
