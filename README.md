@@ -2,7 +2,7 @@
 
 Fractals
 
-![Screenshot](frac.jpg)
+![Screenshot](anim/animy.gif)
 
 This is a simple C program that uses complex.h for manipulating complex numbers for the fractal calculation
 
