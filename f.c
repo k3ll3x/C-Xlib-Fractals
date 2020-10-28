@@ -30,7 +30,7 @@ float pi = 3.14159f;
 
 //color changer
 int clrset = 0;
-int nclrset = 10;
+int nclrset = 13;
 
 //complex numbers
 long double complex z;
@@ -123,19 +123,20 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 					color = _RGB(iter*iter%256, iter*iter*iter%256, iter%256);
 					break;
 					case 1:
-					color = _RGB((int)(iter*iter*cos(iter))%256, (int)(iter*iter*iter*sin(iter))%256, (int)(iter*iter*iter*tan(iter))%256);
+					color = _RGB((int)(iter*creal(z))%256, (int)(iter*cimag(z))%256, (int)(cos(z)*iter)%256);
 					break;
 					case 2:
-					color = _RGB((int)(iter*iter)%256, (int)(iter*iter*iter)%256, (int)(iter*iter*iter)%256);
+					color = _RGB(iter%256, (int)(iter*cimag(z))%256, (int)(iter*creal(z))%256);
+					//color = _RGB((int)(iter*iter)%256, (int)(iter*iter*iter)%256, (int)(iter*iter*iter)%256);
 					break;
 					case 3:
-					color = _RGB((int)(iter*iter*t)%256, (int)(iter*iter*iter*t)%256, (int)(iter*iter*iter*t)%256);
+					color = _RGB(((int)cabsl(z)*iter)%256, ((int)cargl(z)*iter)%256, ((int)cimagl(z)*iter)%256);
 					break;
 					case 4:
-					color = _RGB(0, (int)(iter*iter*iter*t)%256, 0);
+					color = _RGB((int)(iter*iter + z)%256, (int)(z*z*iter / z)%256, (int)(z*iter - z)%256);
 					break;
 					case 5:
-					color = _RGB(iter%256, (int)(tan(iter)*255)%256, (int)(sin(iter)*255)%256);
+					color = _RGB(((int)cargl(z*z)*iter)%256, ((int)cimagl(z*z*z)*iter)%256, ((int)cos(z)*iter)%256);
 					break;
 					case 6:
 					color = _RGB(iter%256, t*iter%256, t*t*iter%256);
@@ -144,10 +145,19 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 					color = _RGB((int)(iter*cos(t*iter))%256, (int)(iter*iter*iter*sin(t))%256, (int)(iter*iter*iter*tan(t*iter))%256);
 					break;
 					case 8:
-					color = _RGB((int)(iter*creal(z))%256, (int)(iter*cimag(z))%256, (int)(cos(z)*iter)%256);
+					color = _RGB((int)(iter*iter*cos(iter))%256, (int)(iter*iter*iter*sin(iter))%256, (int)(iter*iter*iter*tan(iter))%256);
 					break;
 					case 9:
 					color = _RGB((iter*iter*iter)%256, (iter*iter)%256, iter%256);
+					break;
+					case 10:
+					color = _RGB((int)(iter*iter*t)%256, (int)(iter*iter*iter*t)%256, (int)(iter*iter*iter*t)%256);
+					break;
+					case 11:
+					color = _RGB(0, (int)(iter*iter*iter*t)%256, 0);
+					break;
+					case 12:
+					color = _RGB(iter%256, (int)(tan(iter)*255)%256, (int)(sin(iter)*255)%256);
 					break;
 				}
 
@@ -177,7 +187,13 @@ long double complex mandelbrot(long double complex * z, long double * c){
 	switch(fflag){
 		case 0:
 		//z*z + c
-		return *z**z + *c;
+		if(cabsl(*z) >= 0.345f && cabsl(*z) <= 0.678f){
+			return *z**c - *z;
+		}else if((int)(cargl(*z) * 10) % 3 == 0){
+			return *z**z + *c;
+		}else{
+			return *z**z**z**z - *c;
+		}
 		break;
 		case 1:
 		//z*z*sqrt(z*c) - sinh(z+c)
@@ -195,16 +211,16 @@ long double complex mandelbrot(long double complex * z, long double * c){
 		return *z* (cimag(*z) - creal(*z) * I) + *c * cos(*z * *c);
 		break;
 		case 5:
-		return cpowl(*z, *z) + *c;
+		return *z * *z * (1 / *z) + sin(*c);
 		break;
 		case 6:
-		return cimag(*z) - creal(*z) * I + sin(*z**z**z**z**z**c**c**c);
+		return *z + *z**z + *z**z**z + *z**z**z**z + *c;
 		break;
 		case 7:
 		return *z**z**z + cos(*z**z**z**c) - sin(*c**c**c**z);
 		break;
 		case 8:
-		return cos(*z**z**c**c**c) + sin(*c**c**z**z**z) * I - *c;
+		return (*z * pi * *c) - *z**z - *c;
 		break;
 		case 9:
 		return *z**z**z - *c;
@@ -336,8 +352,13 @@ int main(int argc, char ** argv){
 					fclose(fp);
 				}
 				break;
-				case 0x36://c - change return function
+				case 0x36://c - change return function +
 				fflag++;
+				fflag = fflag%ncfunc;
+				break;
+				case 0x35://x - change return function -
+				fflag--;
+				if(fflag <= 0) fflag = ncfunc - 1;
 				fflag = fflag%ncfunc;
 				break;
 				case 0x28://d - restore complex plane to default
@@ -363,6 +384,7 @@ int main(int argc, char ** argv){
 		XDrawString(d, w, DefaultGC(d, s), 0, 30, txt, strlen(txt));
 		snprintf(txt, 100, "C limits: %Lf %Lf", cminy, cmaxy);
 		XDrawString(d, w, DefaultGC(d, s), 0, 50, txt, strlen(txt));
+		//printf("function %d\n", fflag);
 	}
 
 	getchar();
