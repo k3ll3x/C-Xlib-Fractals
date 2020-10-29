@@ -64,8 +64,8 @@ int count = 0;
 long double movestepx, movestepy;
 
 void zoom(char * c, int * x, int * y){
-	long double xf = map(&*x, &rminx, &rmaxx, &cminx, &cmaxx);
-	long double yf = map(&*y, &rminy, &rmaxy, &cminy, &cmaxy);
+	long double xf = map(x, &rminx, &rmaxx, &cminx, &cmaxx);
+	long double yf = map(y, &rminy, &rmaxy, &cminy, &cmaxy);
 	//printf("%Lf %Lf\n", xf, yf);
 	
 	if(*c == '-'){
@@ -90,7 +90,7 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 	
 	long double a = -1.0f;
 	long double b = 1.0f;
-	long double c = map(&*x, &rminx, &rmaxx, &a, &b);
+	long double c = map(x, &rminx, &rmaxx, &a, &b);
 	//printf("%Lf\n", c);
 	float r = 2.0f;
 
