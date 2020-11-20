@@ -1,6 +1,6 @@
 #!/usr/bin/python3
 
-import os, sys
+import os, sys, re
 
 function = ""
 r = ""
@@ -40,7 +40,12 @@ f = open("ftmplt.c","r")
 code = f.read()
 f.close()
 
+cf = re.findall("c\w+", function)
+for i in range(len(cf)):
+	function = function.replace(cf[i], "$" + str(i))
 function = function.replace("z", "*z").replace("c", "*c")
+for i in range(len(cf)):
+	function = function.replace("$" + str(i), cf[i])
 
 code = code.replace("FUNCTION", function)
 code = code.replace("RED", r)

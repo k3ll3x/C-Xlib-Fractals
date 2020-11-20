@@ -121,7 +121,7 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 				switch(clrset){
 					case 0:
 					//color = _RGB(iter*iter%256, iter*iter*iter%256, iter%256);
-					color =  _RGB((int)(z*iter*z*z + cos(t*z*iter)) % 256, (int)(z*z*iter + tan(t*iter*iter)) % 256, (int)(z*iter*iter + sin(t*z*iter*z)) % 256);
+					color =  _RGB((int)(iter*z) % 256, (int)(iter*iter) % 256, (int)(iter*ccosl(z)) % 256);
 					break;
 					case 1:
 					color = _RGB((int)(iter*creal(z))%256, (int)(iter*cimag(z))%256, (int)(cos(z)*iter)%256);
@@ -188,7 +188,7 @@ long double complex mandelbrot(long double complex * z, long double * c){
 	switch(fflag){
 		case 0:
 		//user input
-		return *z**z**z + tan(*c**c**z);
+		return *z**z* cargl(*z**z) + *c * ccosl(*z);
 		break;
 		case 1:
 		//z*z*sqrt(z*c) - sinh(z+c)

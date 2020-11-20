@@ -29,3 +29,11 @@ Keys and Mouse:
 For building the binaries just do
 
 	make
+
+Python Script added for user input, usage:
+
+	./ufrac.py FUNCTION
+	./ufrac.py FUNCTION R G B
+
+./ufrac.py "z*z*z + c"
+./ufrac.py "z*z* cargl(z*z) + c * ccosl(z)" "iter*z" "iter*iter" "iter*ccosl(z)"
