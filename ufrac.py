@@ -40,6 +40,8 @@ f = open("ftmplt.c","r")
 code = f.read()
 f.close()
 
+code = code.replace("PFUNCTION", function)
+
 cf = re.findall("c\w+", function)
 for i in range(len(cf)):
 	function = function.replace(cf[i], "$" + str(i))

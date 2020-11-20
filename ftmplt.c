@@ -322,7 +322,7 @@ int main(int argc, char ** argv){
 				{
 					XSetForeground(d, DefaultGC(d, s), _RGB(255,255,255));
 					char * txt = "Saving image, please wait...";
-					XDrawString(d, w, DefaultGC(d, s), 0, 70, txt, strlen(txt));
+					XDrawString(d, w, DefaultGC(d, s), 0, 90, txt, strlen(txt));
 					//save to ppm image
 					FILE *fp;
 					char filename[20];
@@ -379,6 +379,11 @@ int main(int argc, char ** argv){
 		XDrawString(d, w, DefaultGC(d, s), 0, 30, txt, strlen(txt));
 		snprintf(txt, 100, "C limits: %Lf %Lf", cminy, cmaxy);
 		XDrawString(d, w, DefaultGC(d, s), 0, 50, txt, strlen(txt));
+		if(fflag == 0){
+			snprintf(txt, 100, "PFUNCTION");
+			XDrawString(d, w, DefaultGC(d, s), 0, 70, txt, strlen(txt));
+		}
+		
 		//printf("function %d\n", fflag);
 	}
 

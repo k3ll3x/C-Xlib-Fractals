@@ -121,7 +121,7 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 				switch(clrset){
 					case 0:
 					//color = _RGB(iter*iter%256, iter*iter*iter%256, iter%256);
-					color =  _RGB((int)(iter*z) % 256, (int)(iter*iter) % 256, (int)(iter*ccosl(z)) % 256);
+					color =  _RGB((int)(z*iter*z*z + cos(t*z*iter)) % 256, (int)(z*z*iter + tan(t*iter*iter)) % 256, (int)(z*iter*iter + sin(t*z*iter*z)) % 256);
 					break;
 					case 1:
 					color = _RGB((int)(iter*creal(z))%256, (int)(iter*cimag(z))%256, (int)(cos(z)*iter)%256);
@@ -188,7 +188,7 @@ long double complex mandelbrot(long double complex * z, long double * c){
 	switch(fflag){
 		case 0:
 		//user input
-		return *z**z* cargl(*z**z) + *c * ccosl(*z);
+		return 4*csinl(*z**z**c) + 2*csinl(*z) + 2**c*ccosl(*z) + 3*ctanl(*z**z) + *c * *z**z;
 		break;
 		case 1:
 		//z*z*sqrt(z*c) - sinh(z+c)
@@ -322,7 +322,7 @@ int main(int argc, char ** argv){
 				{
 					XSetForeground(d, DefaultGC(d, s), _RGB(255,255,255));
 					char * txt = "Saving image, please wait...";
-					XDrawString(d, w, DefaultGC(d, s), 0, 70, txt, strlen(txt));
+					XDrawString(d, w, DefaultGC(d, s), 0, 90, txt, strlen(txt));
 					//save to ppm image
 					FILE *fp;
 					char filename[20];
@@ -379,6 +379,11 @@ int main(int argc, char ** argv){
 		XDrawString(d, w, DefaultGC(d, s), 0, 30, txt, strlen(txt));
 		snprintf(txt, 100, "C limits: %Lf %Lf", cminy, cmaxy);
 		XDrawString(d, w, DefaultGC(d, s), 0, 50, txt, strlen(txt));
+		if(fflag == 0){
+			snprintf(txt, 100, "4*csinl(z*z*c) + 2*csinl(z) + 2*c*ccosl(z) + 3*ctanl(z*z) + c * z*z");
+			XDrawString(d, w, DefaultGC(d, s), 0, 70, txt, strlen(txt));
+		}
+		
 		//printf("function %d\n", fflag);
 	}
 
