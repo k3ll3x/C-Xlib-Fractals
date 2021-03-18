@@ -63,6 +63,9 @@ int count = 0;
 //moving variable
 long double movestepx, movestepy;
 
+//max iterations
+int maxiter = 2;
+
 void zoom(char * c, int * x, int * y){
 	long double xf = map(x, &rminx, &rmaxx, &cminx, &cmaxx);
 	long double yf = map(y, &rminy, &rmaxy, &cminy, &cmaxy);
@@ -93,8 +96,6 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 	long double c = map(x, &rminx, &rmaxx, &a, &b);
 	//printf("%Lf\n", c);
 	float r = 2.0f;
-
-	int maxiter = 100;
 
 	int i, j;
 	int iter = 0;
@@ -188,7 +189,7 @@ long double complex mandelbrot(long double complex * z, long double * c){
 	switch(fflag){
 		case 0:
 		//user input
-		return 4*csinl(*z**z**c) + 2*csinl(*z) + 2**c*ccosl(*z) + 3*ctanl(*z**z) + *c * *z**z;
+		return *z**z**c**c**c - 2**c;
 		break;
 		case 1:
 		//z*z*sqrt(z*c) - sinh(z+c)
@@ -290,7 +291,7 @@ int main(int argc, char ** argv){
 			}
 		}
 		if(e.type == KeyPress){
-			//printf("%x\n", e.xkey.keycode);
+			printf("%x\n", e.xkey.keycode);
 			switch(e.xkey.keycode){
 				case 0x26://a - change color set
 				clrset++;
@@ -362,6 +363,12 @@ int main(int argc, char ** argv){
 				cminy = -2.0f;
 				cmaxy = 2.0f;
 				break;
+				case 0x29:
+				maxiter++;
+				break;
+				case 0x2A:
+				maxiter--;
+				break;
 				case 0x09://esc
 				return 0;
 				break;
@@ -380,7 +387,7 @@ int main(int argc, char ** argv){
 		snprintf(txt, 100, "C limits: %Lf %Lf", cminy, cmaxy);
 		XDrawString(d, w, DefaultGC(d, s), 0, 50, txt, strlen(txt));
 		if(fflag == 0){
-			snprintf(txt, 100, "4*csinl(z*z*c) + 2*csinl(z) + 2*c*ccosl(z) + 3*ctanl(z*z) + c * z*z");
+			snprintf(txt, 100, "z*z*c*c*c - 2*c");
 			XDrawString(d, w, DefaultGC(d, s), 0, 70, txt, strlen(txt));
 		}
 		

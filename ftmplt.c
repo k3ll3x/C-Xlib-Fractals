@@ -63,6 +63,9 @@ int count = 0;
 //moving variable
 long double movestepx, movestepy;
 
+//max iterations
+int maxiter = 2;
+
 void zoom(char * c, int * x, int * y){
 	long double xf = map(x, &rminx, &rmaxx, &cminx, &cmaxx);
 	long double yf = map(y, &rminy, &rmaxy, &cminy, &cmaxy);
@@ -93,8 +96,6 @@ void calculatePixels(Display * d, Window * w, int * s, int * x){
 	long double c = map(x, &rminx, &rmaxx, &a, &b);
 	//printf("%Lf\n", c);
 	float r = 2.0f;
-
-	int maxiter = 100;
 
 	int i, j;
 	int iter = 0;
@@ -290,7 +291,7 @@ int main(int argc, char ** argv){
 			}
 		}
 		if(e.type == KeyPress){
-			//printf("%x\n", e.xkey.keycode);
+			printf("%x\n", e.xkey.keycode);
 			switch(e.xkey.keycode){
 				case 0x26://a - change color set
 				clrset++;
@@ -361,6 +362,12 @@ int main(int argc, char ** argv){
 				cmaxx = 2.0f;
 				cminy = -2.0f;
 				cmaxy = 2.0f;
+				break;
+				case 0x29://f - increment max iterations per pixel
+				maxiter++;
+				break;
+				case 0x2A://g - decrease max iterations per pixel
+				maxiter--;
 				break;
 				case 0x09://esc
 				return 0;

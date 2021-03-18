@@ -24,6 +24,8 @@ Keys and Mouse:
 	C			-	Change function
 	D			-	Restore Complex Plane to Default
 	A			-	Change Color set
+	F			-	Increase Max Iterations Per Pixel (only in ftmplt.c)
+	G			-	Decrease Max Iterations Per Pixel (only in ftmplt.c)
 	ESC			-	Exit
 
 For building the binaries just do
